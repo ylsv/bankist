@@ -11,9 +11,11 @@ const btnScrollTo = document.querySelector('.btn--scroll-to')
 const header = document.querySelector('.header')
 const nav = document.querySelector('.nav')
 const section1 = document.querySelector('#section--1')
+const allSections = document.querySelectorAll('.section')
 const tabs = document.querySelectorAll('.operations__tab')
 const tabsContainer = document.querySelector('.operations__tab-container')
 const tabsContent = document.querySelectorAll('.operations__content')
+const lazyImages = document.querySelectorAll('img[data-src]')
 
 const openModal = function (e) {
   e.preventDefault()
@@ -101,3 +103,37 @@ const obsOptions = {
 }
 const headerObserver = new IntersectionObserver(stickyNav, obsOptions)
 headerObserver.observe(header)
+
+// Reveal sections on scroll
+const revealSection = (entries, observer) => {
+  const [entry] = entries
+  if (!entry.isIntersecting) return
+  entry.target.classList.remove('section--hidden')
+  observer.unobserve(entry.target) // unobserve revealed section after scroll not to trigger unnecessary events
+}
+const sectionObserver = new IntersectionObserver(revealSection, {
+  root: null,
+  threshold: 0.15,
+})
+allSections.forEach(section => {
+  sectionObserver.observe(section)
+  section.classList.add('section--hidden')
+})
+
+// Lazy-loading images
+const loadImg = (entries, observer) => {
+  const [entry] = entries
+  if (!entry.isIntersecting) return
+  entry.target.src = entry.target.dataset.src
+  //remove blur only after img loading by listening to load event
+  entry.target.addEventListener('load', () =>
+    entry.target.classList.remove('lazy-img')
+  )
+  observer.unobserve(entry.target)
+}
+const imgObserver = new IntersectionObserver(loadImg, {
+  root: null,
+  threshold: 0,
+  rootMargin: '200px',
+})
+lazyImages.forEach(img => imgObserver.observe(img))
